@@ -3,53 +3,85 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Калькулятор средней зарплаты</title>
+    <title>Калькулятор зарплаты</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Arial', sans-serif;
+            margin: 0;
             padding: 20px;
-            max-width: 600px;
-            margin: auto;
-            background-color: #f4f4f4;
+            background: linear-gradient(135deg, #74ebd5, #ACB6E5);
+            color: #333;
         }
         .calculator {
-            background: white;
+            max-width: 650px;
+            background: #fff;
             padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            margin: auto;
+        }
+        h2 {
+            text-align: center;
+            color: #444;
+        }
+        .drow {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        input, select, button {
+            padding: 10px;
+            font-size: 14px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            outline: none;
+        }
+        input:focus, select:focus {
+            border-color: #74ebd5;
         }
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 10px;
+            margin-top: 15px;
         }
         th, td {
-            padding: 10px;
             border: 1px solid #ddd;
+            padding: 8px;
             text-align: center;
         }
-        input, select {
-            width: 90%;
-            padding: 5px;
-            text-align: center;
-        }
-        .buttons {
-            margin-top: 15px;
-            text-align: center;
+        th {
+            background: #74ebd5;
+            color: #fff;
         }
         button {
-            padding: 10px 15px;
-            margin: 5px;
-            border: none;
-            background: #007bff;
+            width: 100%;
+            background: #5a67d8;
             color: white;
-            border-radius: 5px;
+            font-weight: bold;
+            border: none;
             cursor: pointer;
+            transition: 0.3s;
         }
         button:hover {
-            background: #0056b3;
+            background: #434190;
         }
-        .hidden {
+        .result-block {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            background: #f9f9f9;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        .result-block h3 {
+            margin-bottom: 10px;
+            color: #444;
+        }
+        .result-block p {
+            margin: 6px 0;
+            font-size: 16px;
+        }
+        .hourly-rate {
             display: none;
         }
     </style>
@@ -57,101 +89,115 @@
 <body>
 
 <div class="calculator">
-    <h2>Калькулятор средней зарплаты</h2>
-    
-    <label for="workType">Выберите тип работы:</label>
-    <select id="workType" onchange="updateWorkType()">
-        <option value="5">5-дневная рабочая неделя</option>
-        <option value="6">6-дневная рабочая неделя</option>
-        <option value="hourly">Почасовая работа</option>
-    </select>
+    <h2>Калькулятор зарплаты</h2>
+    <form id="count_calc">  
+        <div class="drow">
+            <label>График работы:</label>
+            <select name="grafic">
+                <option value="5_day_week">5-дневка (40 часов)</option>
+                <option value="6_day_week">6-дневка</option>
+                <option value="hourly">Почасовая работа</option>
+            </select>
+        </div>
 
-    <div id="hourlyInput" class="hidden">
-        <label for="monthlyHours">Введите количество рабочих часов в месяц:</label>
-        <input type="number" id="monthlyHours" value="160">
+        <div class="drow">
+            <label>Исключаемые дни:</label>
+            <input type="number" name="count_days_exclude" value="0" min="0">
+        </div>
+
+        <div class="drow hourly-input" style="display:none;">
+            <label>Часы в месяц:</label>
+            <input type="number" name="count_working_hours" value="160" min="0">
+        </div>
+
+        <h3>Данные по зарплате</h3>
+        <table style="margin-bottom: 30px;">
+            <thead>
+                <tr>
+                    <th>Месяц</th>
+                    <th>Зарплата</th>
+                    <th>Премия</th>
+                </tr>
+            </thead>
+            <tbody id="salary-table">
+                <script>
+                    let months = [
+                        "Январь", "Февраль", "Март", "Апрель", "Май", "Июнь",
+                        "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"
+                    ];
+                    months.forEach(month => {
+                        document.write(`
+                            <tr>
+                                <td>${month}</td>
+                                <td><input type="number" name="oklad[]" value="0"></td>
+                                <td><input type="number" name="premii[]" value="0"></td>
+                            </tr>
+                        `);
+                    });
+                </script>
+            </tbody>
+        </table>
+
+        <button type="submit">Рассчитать</button>
+    </form>
+
+    <div class="result-block">
+        <h3>Результаты</h3>
+        <p><strong>Общая зарплата:</strong> <span id="total-salary">0</span> сум</p>
+        <p><strong>Общая премия:</strong> <span id="total-bonuses">0</span> сум</p>
+        <p><strong>Суммарно (ЗП + премии):</strong> <span id="total-all">0</span> сум</p>
+        <p><strong>Среднемесячная ЗП:</strong> <span id="avg-monthly">0</span> сум</p>
+        <p><strong>Среднедневная ЗП:</strong> <span id="avg-daily">0</span> сум</p>
+        <p class="hourly-rate"><strong>Среднечасовая ЗП:</strong> <span id="avg-hourly">0</span> сум</p>
     </div>
-
-    <table>
-        <thead>
-            <tr>
-                <th>Месяц</th>
-                <th>Зарплата (сум)</th>
-                <th>Премии (сум)</th>
-            </tr>
-        </thead>
-        <tbody id="salaryTable">
-            <tr><td>Январь</td><td><input type="number" class="salary" value="0"></td><td><input type="number" class="bonus" value="0"></td></tr>
-            <tr><td>Февраль</td><td><input type="number" class="salary" value="0"></td><td><input type="number" class="bonus" value="0"></td></tr>
-            <tr><td>Март</td><td><input type="number" class="salary" value="0"></td><td><input type="number" class="bonus" value="0"></td></tr>
-            <tr><td>Апрель</td><td><input type="number" class="salary" value="0"></td><td><input type="number" class="bonus" value="0"></td></tr>
-            <tr><td>Май</td><td><input type="number" class="salary" value="0"></td><td><input type="number" class="bonus" value="0"></td></tr>
-            <tr><td>Июнь</td><td><input type="number" class="salary" value="0"></td><td><input type="number" class="bonus" value="0"></td></tr>
-            <tr><td>Июль</td><td><input type="number" class="salary" value="0"></td><td><input type="number" class="bonus" value="0"></td></tr>
-            <tr><td>Август</td><td><input type="number" class="salary" value="0"></td><td><input type="number" class="bonus" value="0"></td></tr>
-            <tr><td>Сентябрь</td><td><input type="number" class="salary" value="0"></td><td><input type="number" class="bonus" value="0"></td></tr>
-            <tr><td>Октябрь</td><td><input type="number" class="salary" value="0"></td><td><input type="number" class="bonus" value="0"></td></tr>
-            <tr><td>Ноябрь</td><td><input type="number" class="salary" value="0"></td><td><input type="number" class="bonus" value="0"></td></tr>
-            <tr><td>Декабрь</td><td><input type="number" class="salary" value="0"></td><td><input type="number" class="bonus" value="0"></td></tr>
-        </tbody>
-    </table>
-
-    <div class="buttons">
-        <button onclick="calculate()">Рассчитать</button>
-        <button onclick="resetForm()">Сбросить</button>
-    </div>
-
-    <h3>Результаты:</h3>
-    <p><strong>Средняя зарплата:</strong> <span id="averageSalary">0</span> сум</p>
 </div>
 
 <script>
-    function updateWorkType() {
-        const workType = document.getElementById("workType").value;
-        const hourlyInput = document.getElementById("hourlyInput");
+document.querySelector("select[name='grafic']").addEventListener("change", function () {
+    document.querySelector(".hourly-input").style.display = this.value === "hourly" ? "block" : "none";
+});
 
-        if (workType === "hourly") {
-            hourlyInput.classList.remove("hidden");
-        } else {
-            hourlyInput.classList.add("hidden");
-        }
+document.getElementById("count_calc").addEventListener("submit", function (e) {
+    e.preventDefault();
+
+    let salaries = document.querySelectorAll("input[name='oklad[]']");
+    let bonuses = document.querySelectorAll("input[name='premii[]']");
+    let workType = document.querySelector("select[name='grafic']").value;
+    let excludeDays = parseInt(document.querySelector("input[name='count_days_exclude']").value) || 0;
+    let workHours = parseInt(document.querySelector("input[name='count_working_hours']").value) || 0;
+
+    let totalSalary = 0;
+    let totalBonuses = 0;
+    let totalMonths = salaries.length;
+
+    salaries.forEach((s, i) => {
+        totalSalary += parseFloat(s.value) || 0;
+        totalBonuses += parseFloat(bonuses[i].value) || 0;
+    });
+
+    let totalAll = totalSalary + totalBonuses;
+    let avgMonthly = totalAll / totalMonths;
+    let avgDaily = 0;
+    let avgHourly = 0;
+
+    if (workType === "5_day_week") {
+        let totalDays = (totalMonths * 21) - excludeDays;
+        avgDaily = totalAll / totalDays;
+    } else if (workType === "6_day_week") {
+        let totalDays = (totalMonths * 26) - excludeDays;
+        avgDaily = totalAll / totalDays;
+    } else if (workType === "hourly") {
+        avgHourly = totalAll / workHours;
     }
 
-    function calculate() {
-        let totalSalary = 0;
-        let totalDays = 0;
-        const salaries = document.querySelectorAll(".salary");
-        const bonuses = document.querySelectorAll(".bonus");
-        const workType = document.getElementById("workType").value;
-        
-        salaries.forEach((salary, index) => {
-            totalSalary += parseFloat(salary.value) + parseFloat(bonuses[index].value);
-        });
-
-        if (workType === "5") {
-            totalDays = 12 * 21; // 12 месяцев по 21 рабочему дню
-        } else if (workType === "6") {
-            totalDays = 12 * 25; // 12 месяцев по 25 рабочих дней
-        } else if (workType === "hourly") {
-            const hoursPerMonth = parseFloat(document.getElementById("monthlyHours").value);
-            totalDays = (hoursPerMonth / 8) * 12; // Переводим часы в дни
-        }
-
-        let averageSalary;
-        if (workType === "hourly") {
-            const totalHours = totalDays * 8; // Общее кол-во часов
-            averageSalary = totalSalary / totalHours;
-            document.getElementById("averageSalary").innerText = averageSalary.toFixed(2) + " сум/час";
-        } else {
-            averageSalary = totalSalary / totalDays;
-            document.getElementById("averageSalary").innerText = averageSalary.toFixed(2) + " сум/день";
-        }
-    }
-
-    function resetForm() {
-        document.querySelectorAll(".salary, .bonus").forEach(input => input.value = 0);
-        document.getElementById("monthlyHours").value = 160;
-        document.getElementById("averageSalary").innerText = "0";
-    }
+    document.getElementById("total-salary").textContent = totalSalary.toFixed(2);
+    document.getElementById("total-bonuses").textContent = totalBonuses.toFixed(2);
+    document.getElementById("total-all").textContent = totalAll.toFixed(2);
+    document.getElementById("avg-monthly").textContent = avgMonthly.toFixed(2);
+    document.getElementById("avg-daily").textContent = avgDaily.toFixed(2);
+    document.getElementById("avg-hourly").textContent = avgHourly.toFixed(2);
+    document.querySelector(".hourly-rate").style.display = workType === "hourly" ? "block" : "none";
+});
 </script>
 
 </body>
